@@ -18,8 +18,11 @@ async function checkTickets() {
   const page = await browser.newPage();
 
   try {
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
-    await new Promise(res => setTimeout(res, 5000)); // give time for dynamic content
+    await page.goto(URL, {
+      waitUntil: ['domcontentloaded', 'networkidle2'],
+      timeout: 10000
+    })
+    await new Promise(res => setTimeout(res, 10000)); // give time for dynamic content
 
     const foundMatches = await page.evaluate(() => {
       const result = { mallorca: false, celta: false };
