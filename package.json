@@ -5,7 +5,7 @@
   "main": "realTickets.js",
   "scripts": {
     "start": "node realTickets.js",
-    "postinstall": "puppeteer install"
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "discord.js": "^14.11.0",
