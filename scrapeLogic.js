@@ -1,51 +1,85 @@
-const puppeteer = require("puppeteer");
-require("dotenv").config();
+require('dotenv').config();
+const { Client, GatewayIntentBits } = require('discord.js');
+const puppeteer = require('puppeteer');
 
-const scrapeLogic = async (res) => {
+const URL = 'https://www.realmadrid.com/en-US/tickets?filter-tickets=vip;general&filter-football=primer-equipo-masculino';
+const CHECK_INTERVAL = 10 * 1000;
+
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],
+  partials: ['CHANNEL'],
+});
+
+async function checkTickets() {
   const browser = await puppeteer.launch({
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath(),
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
+  const page = await browser.newPage();
+
   try {
-    const page = await browser.newPage();
+    await page.goto(URL, {
+      waitUntil: ['domcontentloaded', 'networkidle2'],
+      timeout: 10000
+    })
+    await new Promise(res => setTimeout(res, 10000)); // give time for dynamic content
 
-    await page.goto("https://developer.chrome.com/");
+    const foundMatches = await page.evaluate(() => {
+      const result = { mallorca: false, celta: false };
+      const cards = Array.from(document.querySelectorAll('app-all-event-card'));
 
-    // Set screen size
-    await page.setViewport({ width: 1080, height: 1024 });
+      for (const card of cards) {
+        const text = card.innerText.toLowerCase();
+        const spans = Array.from(card.querySelectorAll('span.rm-button__content.ng-star-inserted'));
 
-    // Type into search box
-    await page.type(".search-box__input", "automate beyond recorder");
+        const hasBuyButton = spans.some(span => span.innerText.trim() === 'Buy tickets');
 
-    // Wait and click on first result
-    const searchResultSelector = ".search-box__link";
-    await page.waitForSelector(searchResultSelector);
-    await page.click(searchResultSelector);
+        if (text.includes('mallorca') && hasBuyButton) {
+          result.mallorca = true;
+        }
 
-    // Locate the full title with a unique string
-    const textSelector = await page.waitForSelector(
-      "text/Customize and automate"
-    );
-    const fullTitle = await textSelector.evaluate((el) => el.textContent);
+        if (text.includes('celta') && hasBuyButton) {
+          result.celta = true;
+        }
+      }
 
-    // Print the full title
-    const logStatement = `The title of this blog post is ${fullTitle}`;
-    console.log(logStatement);
-    res.send(logStatement);
-  } catch (e) {
-    console.error(e);
-    res.send(`Something went wrong while running Puppeteer: ${e}`);
+      return result;
+    });
+
+    return foundMatches;
+  } catch (err) {
+    console.error('❌ Error checking tickets:', err);
+    return { mallorca: false, celta: false };
   } finally {
     await browser.close();
   }
-};
+}
 
-module.exports = { scrapeLogic };
+async function startChecker() {
+  let notifiedMallorca = false;
+
+  setInterval(async () => {
+    const { mallorca, celta } = await checkTickets();
+
+    console.log(`[${new Date().toLocaleTimeString()}] Celta de Vigo tickets: ${celta ? '✅ Available' : '❌ Not yet'}`);
+    console.log(`[${new Date().toLocaleTimeString()}] Mallorca tickets: ${mallorca ? '✅ Available' : '❌ Not yet'}`);
+
+    if (mallorca && !notifiedMallorca) {
+      try {
+        const user = await client.users.fetch(process.env.USER_ID);
+        await user.send(`🎟️ Mallorca tickets are available! Buy now: ${URL}`);
+        console.log('✅ Mallorca notification sent!');
+        notifiedMallorca = true;
+      } catch (err) {
+        console.error('❌ Failed to send Discord message:', err);
+      }
+    }
+  }, CHECK_INTERVAL);
+}
+
+client.once('ready', () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+  startChecker();
+});
+
+client.login(process.env.DISCORD_TOKEN);
