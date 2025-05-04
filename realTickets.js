@@ -13,12 +13,12 @@ const client = new Client({
 async function checkTickets() {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-features=site-per-process']
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
 
   try {
-    await page.goto(URL, { waitUntil: 'networkidle2' });
+    await page.goto(URL, { waitUntil: 'domcontentloaded' });
     await new Promise(res => setTimeout(res, 5000)); // give time for dynamic content
 
     const foundMatches = await page.evaluate(() => {
