@@ -12,9 +12,8 @@ async function scrapeLogic(res) {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-
-    const page = await browser.newPage();
     console.log('✅ Browser launched, opening page...');
+    const page = await browser.newPage();
 
     console.log(`🌐 Navigating to ${URL}...`);
     await page.goto(URL, {
