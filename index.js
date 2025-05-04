@@ -4,8 +4,9 @@ const app = express();
 
 const PORT = process.env.PORT || 4000;
 
-app.get("/scrape", (req, res) => {
-  scrapeLogic(res);
+app.get("/scrape", async (req, res) => {
+  await scrapeLogic(); // run the logic
+  res.send("✅ Scrape triggered. Check logs.");
 });
 
 app.get("/", (req, res) => {
@@ -13,5 +14,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
+  console.log(`🚀 Listening on port ${PORT}`);
 });
