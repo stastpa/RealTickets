@@ -1,0 +1,14 @@
+{
+  "name": "realTickets",
+  "version": "1.0.0",
+  "description": "Monitors Real Madrid tickets for Celta and Mallorca",
+  "main": "realTickets.js",
+  "scripts": {
+    "start": "node realTickets.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.3.1",
+    "puppeteer": "^21.3.8"
+  }
+}
