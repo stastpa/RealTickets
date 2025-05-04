@@ -29,7 +29,7 @@ async function scrapeLogic(res) {
 
     console.log('🔍 Evaluating page content...');
     const foundMatches = await page.evaluate(() => {
-      const result = { mallorca: false, celta: false };
+      const result = { mallorca: false};
       const cards = Array.from(document.querySelectorAll('app-all-event-card'));
 
       for (const card of cards) {
@@ -39,10 +39,6 @@ async function scrapeLogic(res) {
 
         if (text.includes('mallorca') && hasBuyButton) {
           result.mallorca = true;
-        }
-
-        if (text.includes('celta') && hasBuyButton) {
-          result.celta = true;
         }
       }
 

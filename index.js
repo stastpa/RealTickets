@@ -4,9 +4,9 @@ const app = express();
 
 const PORT = process.env.PORT || 4000;
 
+// 🔧 res is handled inside scrapeLogic, no need to send another response
 app.get("/scrape", async (req, res) => {
-  await scrapeLogic(); // run the logic
-  res.send("✅ Scrape triggered. Check logs.");
+  await scrapeLogic(res); // this sends the response
 });
 
 app.get("/", (req, res) => {
