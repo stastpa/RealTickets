@@ -1,15 +1,18 @@
 {
-  "name": "realTickets",
+  "name": "puppeteer-render",
   "version": "1.0.0",
-  "description": "Monitors Real Madrid tickets for Celta and Mallorca",
-  "main": "realTickets.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node realTickets.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.11.0",
-    "dotenv": "^16.3.1",
-    "puppeteer": "^24.8.0"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "puppeteer": "^19.7.2"
   }
 }
