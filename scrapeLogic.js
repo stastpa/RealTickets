@@ -1,16 +1,8 @@
-require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
 const puppeteer = require('puppeteer');
 
 const URL = 'https://www.realmadrid.com/en-US/tickets?filter-tickets=vip;general&filter-football=primer-equipo-masculino';
-const CHECK_INTERVAL = 10 * 1000;
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],
-  partials: ['CHANNEL'],
-});
-
-async function checkTickets() {
+async function scrapeLogic(res) {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -21,8 +13,8 @@ async function checkTickets() {
     await page.goto(URL, {
       waitUntil: ['domcontentloaded', 'networkidle2'],
       timeout: 10000
-    })
-    await new Promise(res => setTimeout(res, 10000)); // give time for dynamic content
+    });
+    await new Promise(res => setTimeout(res, 10000));
 
     const foundMatches = await page.evaluate(() => {
       const result = { mallorca: false, celta: false };
@@ -46,40 +38,14 @@ async function checkTickets() {
       return result;
     });
 
-    return foundMatches;
+    console.log('🎟️ Scraping completed:', foundMatches);
+    res.json(foundMatches);
   } catch (err) {
-    console.error('❌ Error checking tickets:', err);
-    return { mallorca: false, celta: false };
+    console.error('❌ Error in scraping:', err);
+    res.status(500).json({ error: 'Scraping failed', details: err.message });
   } finally {
     await browser.close();
   }
 }
 
-async function startChecker() {
-  let notifiedMallorca = false;
-
-  setInterval(async () => {
-    const { mallorca, celta } = await checkTickets();
-
-    console.log(`[${new Date().toLocaleTimeString()}] Celta de Vigo tickets: ${celta ? '✅ Available' : '❌ Not yet'}`);
-    console.log(`[${new Date().toLocaleTimeString()}] Mallorca tickets: ${mallorca ? '✅ Available' : '❌ Not yet'}`);
-
-    if (mallorca && !notifiedMallorca) {
-      try {
-        const user = await client.users.fetch(process.env.USER_ID);
-        await user.send(`🎟️ Mallorca tickets are available! Buy now: ${URL}`);
-        console.log('✅ Mallorca notification sent!');
-        notifiedMallorca = true;
-      } catch (err) {
-        console.error('❌ Failed to send Discord message:', err);
-      }
-    }
-  }, CHECK_INTERVAL);
-}
-
-client.once('ready', () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-  startChecker();
-});
-
-client.login(process.env.DISCORD_TOKEN);
+module.exports = { scrapeLogic };
