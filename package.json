@@ -4,7 +4,8 @@
   "description": "Monitors Real Madrid tickets for Celta and Mallorca",
   "main": "realTickets.js",
   "scripts": {
-    "start": "node realTickets.js"
+    "start": "node realTickets.js",
+    "postinstall": "puppeteer install"
   },
   "dependencies": {
     "discord.js": "^14.11.0",
